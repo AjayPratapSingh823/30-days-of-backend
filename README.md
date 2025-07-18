@@ -1,92 +1,77 @@
-Thank you, Sir ✅ — now you've shown the actual output of mapping.items() (i.e., your column mapping from mapped_column: file_column).
+Ah! Got it — you want this:
 
-Let’s break this down and then I'll give you code that copies the data from the DataFrame (df) using these mappings into a new dictionary:
+> Keep the column names from mapped_columns (i.e., new names), but keep the data from the matching columns in df.
+
+
 
 
 ---
 
-🧠 Your Mapping Format:
+✅ Example:
 
-mapping = {
-    'coverholder name': 'Match not found',
-    'umr': 'Match not found',
-    'reporting period end': 'Match not found',
-    'insurance type': 'Match not found',
-    'certificate ref': 'Policy Number',
-    'insured name': 'Client Name',
-    ...
+Suppose:
+
+df.columns: ['Name', 'Age', 'Gender', 'Address']
+
+file_columns: ['Name', 'Age', 'Gender']
+mapped_columns = {
+    'Full Name': 'Name',
+    'Years': 'Age',
+    'Sex': 'Gender'
 }
 
-So mapped_column: file_column.
+You want to extract the data from df['Name'], df['Age'], df['Gender'] but rename them to 'Full Name', 'Years', 'Sex' in the result.
 
 
 ---
 
-🎯 Your Goal:
+✅ Solution:
 
-Loop through mapping
+# Step 1: Only keep mappings where df has that column
+valid_mappings = {new: old for new, old in mapped_columns.items() if old in df.columns}
 
-If file_column ≠ "Match not found" AND it exists in df.columns
+# Step 2: Extract the data and rename columns
+mapped_column = df[[old for old in valid_mappings.values()]].rename(columns={v: k for k, v in valid_mappings.items()})
 
-Copy all values from that file column into a result like:
+print(mapped_column)
 
 
-{
-    'certificate ref': [...data from Policy Number...],
-    'insured name': [...data from Client Name...],
-    ...
+---
+
+🧠 Explanation:
+
+valid_mappings filters out any mappings where df does not have the old column.
+
+Then we subset df by those columns.
+
+Finally, rename changes the column names to the desired ones.
+
+
+
+---
+
+✅ Output:
+
+If:
+
+df = pd.DataFrame({
+    'Name': ['Ajay', 'Ravi'],
+    'Age': [25, 30],
+    'Gender': ['M', 'M'],
+    'Address': ['Delhi', 'Mumbai']
+})
+mapped_columns = {
+    'Full Name': 'Name',
+    'Years': 'Age',
+    'Sex': 'Gender',
+    'City': 'Location'  # Invalid column not in df
 }
 
+Then mapped_column becomes:
 
----
+Full Name  Years Sex
+0      Ajay     25   M
+1      Ravi     30   M
 
-✅ Final Code: Copy Data for Valid Mappings
-
-def extract_mapped_column_data(df, mapping: dict):
-    result = {}
-    for mapped_col, file_col in mapping.items():
-        if file_col != "Match not found" and file_col in df.columns:
-            # Get data from DataFrame column
-            result[mapped_col] = df[file_col].fillna("").astype(str).tolist()
-        else:
-            # If not found or invalid, assign empty list
-            result[mapped_col] = []
-    return result
-
-
----
-
-✅ Example Usage:
-
-mapped_data = extract_mapped_column_data(df, mapping)
-print(mapped_data)
-
-
----
-
-🧾 Example Output:
-
-{
-    'certificate ref': ['POL123', 'POL456'],
-    'insured name': ['John Doe', 'Alice Smith'],
-    'risk inception date': ['2024-01-01', '2024-01-02'],
-    'risk expiry date': ['2024-12-31', '2024-12-30'],
-    ...
-    'coverholder name': [],  # because Match not found
-    'umr': [],               # because Match not found
-}
-
-
----
-
-Let me know if you want to:
-
-Save this mapped_data to MySQL
-
-Convert it to JSON and return from an API
-
-Export as CSV/Excel
-
-
-Happy to help with the next step.
+Let me know if you want to export it to Excel or JSON next.
 
